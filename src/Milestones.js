@@ -6,16 +6,14 @@ const Milestones = (props) => {
 
   // Work out the future date e.g add days to todays date
   const addDays = (days) => {
-    let date = new Date(startDate);
-    date.setDate(date.getDate() + days);
+    let date = new Date(startDate.getTime() + (days * 24 * 60 * 60 * 1000));
     return date;
   };
 
   // Work out days left from future date
   const daysLeft = (futureDate) => {
     let today = new Date();
-    const oneDay = 24 * 60 * 60 * 1000;
-    const diff = Math.round((futureDate - today) / oneDay);
+    const diff = futureDate - today;
     return diff;
   };
 
@@ -23,20 +21,19 @@ const Milestones = (props) => {
     <div className="milestones">
       {milestones.map((days, index) => {
         let message;
-        // Greater than 1 year
-        if (days / 364 > 1) {
+        // Greater than or equal to 1 year (365 days)
+        if (days >= 365) {
           message = `${Math.round(days / 365)} Years`;
-        // If week is greater than 1 and 52 weeks.
-        } else if (days / 7 > 1 && days / 6 < 52) {
-          message = `${Math.round(days / 7)} Weeks (${days} days)`;
+        // If weeks is greater than or equal to 1 week but less than a year
+        } else if (days >= 7 && days < 365) {
+          message = `${Math.floor(days / 7)} Weeks (${days} days)`;
           // It's short enough to show days!
         } else {
           message = `${days} Days`;
         }
         const futureDate = addDays(days);
         const daysToGo = daysLeft(futureDate);
-        const daysToGoMessage = daysToGo < 1 ? `✅`  : `${daysToGo.toLocaleString('en-GB')} Days Left`;
-        return <h4 key={index}>{message} - {daysToGoMessage} </h4>
+        return <h4 key={index}>{message} {daysToGo <= 0 ? '✅' : ''} </h4>
       })}
     </div>
   );

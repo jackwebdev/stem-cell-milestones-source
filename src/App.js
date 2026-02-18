@@ -18,7 +18,7 @@ function App() {
           <h2 className="butterfly">🦋</h2>
           <TimeDifference startDate={startDate} />
           <h3>Milestones ⏳</h3>
-          <Milestones startDate={startDate} milestones={[7, 14, 21, 28, 35, 42, 49, 56, 63, 70, 77, 84, 100, 150, 200, 365, 730, 1095, 1460, 1825]}/>
+          <Milestones startDate={startDate} milestones={[7, 14, 21, 28, 35, 42, 49, 56, 63, 70, 77, 84, 100, 150, 200, 365, 730, 1095, 1460, 1826, 2191, 2557, 2922, 3287, 3652]}/>
         </div>
       </header>
     </div>

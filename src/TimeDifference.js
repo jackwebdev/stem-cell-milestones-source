@@ -1,45 +1,59 @@
 import React, { useState, useEffect } from "react";
 
 const TimeDifference = (props) => {
-  const [time, setTimer] = useState("");
+  // eslint-disable-next-line no-unused-vars
+  const [seconds, setSeconds] = useState(0);
 
+  // Update seconds every second
   useEffect(() => {
-    const timer = setInterval(() => setTimer(time + 1), 1000);
-    return () => clearTimeout(timer);
-  });
+    const interval = setInterval(() => {
+      setSeconds((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
-  const startDate = props.startDate.getTime();
+  const startDate = props.startDate;
   const today = new Date();
 
-  const oneDay = 24 * 60 * 60 * 1000; // 24 hours one day
+  // Use proper date math - calculate difference in milliseconds
+  const diffMs = today.getTime() - startDate.getTime();
+  const oneDay = 24 * 60 * 60 * 1000;
 
-  let diff = Math.floor(today.getTime() - startDate);
-  let secs = Math.floor(diff / 1000);
-  let mins = Math.floor(secs / 60);
-  let hours = Math.floor(mins / 60);
-  let days = Math.floor(hours / 24);
-  let months = Math.floor(days / 31);
-  let years = Math.floor(months / 12);
+  // Total days elapsed (accurate from date diff)
+  let totalDaysElapsed = Math.floor(diffMs / oneDay);
 
-  months = Math.floor(months % 12);
-  days = Math.floor(days % 31);
-  hours = Math.floor(hours % 24);
-  mins = Math.floor(mins % 60);
-  secs = Math.floor(secs % 60);
+  // Calculate years, months, days from the actual dates
+  let years = today.getFullYear() - startDate.getFullYear();
+  let months = today.getMonth() - startDate.getMonth();
+  let days = today.getDate() - startDate.getDate();
 
-  let totalDaysElapsed = Math.round(
-    Math.abs((today.getTime() - startDate) / oneDay)
-  );
+  // Adjust for negative days
+  if (days < 0) {
+    months--;
+    // Get the last day of the previous month
+    const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+    days += lastMonth.getDate();
+  }
+
+  // Adjust for negative months
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+
+  let secs = Math.floor((diffMs / 1000) % 60);
+  let mins = Math.floor((diffMs / (1000 * 60)) % 60);
+  let hours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
 
   return (
     <>
       <div className="totalDays">
         <h2>{totalDaysElapsed} Days</h2>
       </div>
-      
+
       <div>
         <h3>Time Elapsed 🕐</h3>
-        {days >= 0 && (
+        {totalDaysElapsed >= 0 && (
           <>
             {years > 0 && <h3>{years} Years</h3>}
             {(months > 0 || years > 0) && <h3>{months} Months</h3>}
