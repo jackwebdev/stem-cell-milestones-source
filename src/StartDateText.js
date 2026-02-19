@@ -10,7 +10,9 @@ const StartDateText = (props) => {
     let hour = date.getHours();
     let min = date.getMinutes();
 
-    const ampm = hour >= 12 ? 'am' : 'pm';
+    const ampm = hour >= 12 ? 'pm' : 'am';
+    hour = hour % 12 || 12;
+    min = String(min).padStart(2, "0");
     const time = `${hour}:${min} ${ampm}`
 
     

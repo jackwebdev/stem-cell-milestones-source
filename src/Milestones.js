@@ -1,39 +1,72 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+
+const MS_IN_DAY = 24 * 60 * 60 * 1000;
+
+const getWholeYearsBetween = (startDate, endDate) => {
+  let years = endDate.getUTCFullYear() - startDate.getUTCFullYear();
+  const anniversary = new Date(startDate.getTime());
+  anniversary.setUTCFullYear(startDate.getUTCFullYear() + years);
+
+  if (anniversary.getTime() > endDate.getTime()) {
+    years -= 1;
+  }
+
+  return years;
+};
 
 const Milestones = (props) => {
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const startDate = props.startDate;
   const milestones = props.milestones;
 
-  // Work out the future date e.g add days to todays date
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNowMs(Date.now());
+    }, 250);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Work out the future date e.g add days to today's date
   const addDays = (days) => {
-    let date = new Date(startDate.getTime() + (days * 24 * 60 * 60 * 1000));
+    let date = new Date(startDate.getTime() + days * MS_IN_DAY);
     return date;
   };
 
-  // Work out days left from future date
-  const daysLeft = (futureDate) => {
-    let today = new Date();
-    const diff = futureDate - today;
-    return diff;
+  const getMilestoneLabel = (days, futureDate) => {
+    if (days >= 365) {
+      const wholeYears = getWholeYearsBetween(startDate, futureDate);
+      const anniversary = new Date(startDate.getTime());
+      anniversary.setUTCFullYear(startDate.getUTCFullYear() + wholeYears);
+
+      // Only call it a year milestone if the future date is an exact anniversary.
+      if (wholeYears > 0 && anniversary.getTime() === futureDate.getTime()) {
+        return `${wholeYears} ${wholeYears === 1 ? "Year" : "Years"}`;
+      }
+
+      return `${days} Days`;
+    }
+
+    if (days >= 7) {
+      const weeks = Math.floor(days / 7);
+      return `${weeks} ${weeks === 1 ? "Week" : "Weeks"} (${days} days)`;
+    }
+
+    return `${days} Days`;
   };
 
   return (
     <div className="milestones">
       {milestones.map((days, index) => {
-        let message;
-        // Greater than or equal to 1 year (365 days)
-        if (days >= 365) {
-          message = `${Math.round(days / 365)} Years`;
-        // If weeks is greater than or equal to 1 week but less than a year
-        } else if (days >= 7 && days < 365) {
-          message = `${Math.floor(days / 7)} Weeks (${days} days)`;
-          // It's short enough to show days!
-        } else {
-          message = `${days} Days`;
-        }
         const futureDate = addDays(days);
-        const daysToGo = daysLeft(futureDate);
-        return <h4 key={index}>{message} {daysToGo <= 0 ? '✅' : ''} </h4>
+        const message = getMilestoneLabel(days, futureDate);
+        const isReached = nowMs >= futureDate.getTime();
+
+        return (
+          <h4 key={index}>
+            {message} {isReached ? "✅" : ""}
+          </h4>
+        );
       })}
     </div>
   );

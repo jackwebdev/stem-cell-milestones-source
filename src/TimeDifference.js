@@ -1,49 +1,81 @@
 import React, { useState, useEffect } from "react";
 
-const TimeDifference = (props) => {
-  // eslint-disable-next-line no-unused-vars
-  const [seconds, setSeconds] = useState(0);
+const MS_IN_SECOND = 1000;
+const MS_IN_MINUTE = 60 * MS_IN_SECOND;
+const MS_IN_HOUR = 60 * MS_IN_MINUTE;
+const MS_IN_DAY = 24 * MS_IN_HOUR;
 
-  // Update seconds every second
+const getElapsedTimeParts = (startDate, endDate) => {
+  if (endDate.getTime() < startDate.getTime()) {
+    return {
+      years: 0,
+      months: 0,
+      days: 0,
+      hours: 0,
+      mins: 0,
+      secs: 0,
+    };
+  }
+
+  let years = endDate.getUTCFullYear() - startDate.getUTCFullYear();
+  let yearCursor = new Date(startDate.getTime());
+  yearCursor.setUTCFullYear(startDate.getUTCFullYear() + years);
+
+  if (yearCursor.getTime() > endDate.getTime()) {
+    years -= 1;
+    yearCursor = new Date(startDate.getTime());
+    yearCursor.setUTCFullYear(startDate.getUTCFullYear() + years);
+  }
+
+  let months =
+    (endDate.getUTCFullYear() - yearCursor.getUTCFullYear()) * 12 +
+    (endDate.getUTCMonth() - yearCursor.getUTCMonth());
+
+  let monthCursor = new Date(yearCursor.getTime());
+  monthCursor.setUTCMonth(monthCursor.getUTCMonth() + months);
+
+  if (monthCursor.getTime() > endDate.getTime()) {
+    months -= 1;
+    monthCursor = new Date(yearCursor.getTime());
+    monthCursor.setUTCMonth(monthCursor.getUTCMonth() + months);
+  }
+
+  let remainingMs = endDate.getTime() - monthCursor.getTime();
+
+  const days = Math.floor(remainingMs / MS_IN_DAY);
+  remainingMs -= days * MS_IN_DAY;
+
+  const hours = Math.floor(remainingMs / MS_IN_HOUR);
+  remainingMs -= hours * MS_IN_HOUR;
+
+  const mins = Math.floor(remainingMs / MS_IN_MINUTE);
+  remainingMs -= mins * MS_IN_MINUTE;
+
+  const secs = Math.floor(remainingMs / MS_IN_SECOND);
+
+  return { years, months, days, hours, mins, secs };
+};
+
+const TimeDifference = (props) => {
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  // Refresh often so milestone/elapsed checks happen close to exact timestamp boundaries.
   useEffect(() => {
     const interval = setInterval(() => {
-      setSeconds((prev) => prev + 1);
-    }, 1000);
+      setNowMs(Date.now());
+    }, 250);
+
     return () => clearInterval(interval);
   }, []);
 
   const startDate = props.startDate;
-  const today = new Date();
-
-  // Use proper date math - calculate difference in milliseconds
-  const diffMs = today.getTime() - startDate.getTime();
-  const oneDay = 24 * 60 * 60 * 1000;
-
-  // Total days elapsed (accurate from date diff)
-  let totalDaysElapsed = Math.floor(diffMs / oneDay);
-
-  // Calculate years, months, days from the actual dates
-  let years = today.getFullYear() - startDate.getFullYear();
-  let months = today.getMonth() - startDate.getMonth();
-  let days = today.getDate() - startDate.getDate();
-
-  // Adjust for negative days
-  if (days < 0) {
-    months--;
-    // Get the last day of the previous month
-    const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
-    days += lastMonth.getDate();
-  }
-
-  // Adjust for negative months
-  if (months < 0) {
-    years--;
-    months += 12;
-  }
-
-  let secs = Math.floor((diffMs / 1000) % 60);
-  let mins = Math.floor((diffMs / (1000 * 60)) % 60);
-  let hours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
+  const nowDate = new Date(nowMs);
+  const diffMs = nowMs - startDate.getTime();
+  const totalDaysElapsed = Math.floor(diffMs / MS_IN_DAY);
+  const { years, months, days, hours, mins, secs } = getElapsedTimeParts(
+    startDate,
+    nowDate,
+  );
 
   return (
     <>
